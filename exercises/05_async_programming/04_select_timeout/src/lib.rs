@@ -42,6 +42,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio::time::sleep;
 
     #[tokio::test]
     async fn test_timeout_success() {
