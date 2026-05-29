@@ -28,9 +28,14 @@ fi
 # 尝试安装 QEMU 用户态（Debian/Ubuntu / Fedora）
 try_install_qemu() {
     if command -v apt-get >/dev/null 2>&1; then
-        echo -e "${YELLOW}    尝试安装: sudo apt-get install -y qemu-user-static${NC}"
-        sudo apt-get update -qq && sudo apt-get install -y qemu-user-static
-        return $?
+        # Ubuntu 24.10+ 将 qemu-user-static 合并为 qemu-user / qemu-user-binfmt
+        for pkg in qemu-user-static qemu-user qemu-user-binfmt; do
+            if apt-cache show "$pkg" >/dev/null 2>&1; then
+                echo -e "${YELLOW}    尝试安装: sudo apt-get install -y $pkg${NC}"
+                sudo apt-get update -qq && sudo apt-get install -y "$pkg" && return 0
+            fi
+        done
+        return 1
     fi
     if command -v dnf >/dev/null 2>&1; then
         echo -e "${YELLOW}    尝试安装: sudo dnf install -y qemu-user-static${NC}"
@@ -97,7 +102,7 @@ else
         echo -e "${GREEN}    安装完成${NC}"
     else
         echo -e "${RED}    未找到且自动安装失败。请手动安装，例如：${NC}"
-        echo "       Debian/Ubuntu: sudo apt-get install qemu-user-static"
+        echo "       Debian/Ubuntu: sudo apt-get install qemu-user qemu-user-binfmt"
         echo "       Fedora:        sudo dnf install qemu-user-static"
         exit 1
     fi
